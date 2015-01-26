@@ -1,0 +1,28 @@
+name: request_status
+
+topology:
+    - spout:
+        name: request_spout
+        type: kafka
+        options:
+            topic: test
+            zk_hosts: localhost:2181/kafka
+            zk_root: /pyleus_kafka_offsets/request_status
+            consumer_id: request_spout
+            from_start: false
+
+    - bolt:
+        name: split_field_bolt
+        module: request_status.split_field_bolt
+        groupings:
+            - shuffle_grouping: request_spout
+
+    - bolt:
+        name: status_count_bolt
+        module: request_status.status_count_bolt
+        tick_freq_secs: 10
+        groupings:
+            - fields_grouping:
+                component: split_field_bolt
+                fields:
+                    - status
